@@ -13,7 +13,7 @@ namespace Dragonfly
 {
     public class DragonflyComponent : GH_Component
     {
-        static List<AsyncRope> ropeSims = new List<AsyncRope>();
+        static List<AsyncCopter> ropeSims = new List<AsyncCopter>();
         bool hasloaded = false;
 
         /// <summary>
@@ -38,6 +38,8 @@ namespace Dragonfly
             pManager.AddPointParameter("Via Points", "Via Points", "A flatterned List of via points for the copter to fly between.", GH_ParamAccess.list);
             pManager.AddNumberParameter("Compleation Distance", "Dist", "The maximum distance to the desired point before it moves down the list", GH_ParamAccess.item);
             pManager.AddNumberParameter("Speed (m/s)", "Speed", "The average speed for the copter to fly, 0.1 std", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
+            pManager.AddNumberParameter("rope Density", "weight", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
 
         }
@@ -51,6 +53,7 @@ namespace Dragonfly
             pManager.AddPointParameter("Current Position", "Copter", "The current position which loops from start to finish.", GH_ParamAccess.item);
             pManager.AddPointParameter("Next Position", "Next Pos", "The current desited position.", GH_ParamAccess.item);
             pManager.AddCurveParameter("Copter Trail", "Trail", "copter trail which is the flight path it has taken", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -66,13 +69,17 @@ namespace Dragonfly
             StringWriter ErrorMsg = new StringWriter();
             double compleationDist = 0;
             double speeed = 0.1;
+            double ropeweight = 0.05;
+            double springConstant = 10;
 
             // Use the DA object to retrieve the data inside the first input parameter.
             // If the retieval fails (for example if there is no data) we need to abort.
             if (!DA.GetDataList(0, viaPoints)) { return; }
             if (!DA.GetData(1, ref compleationDist)) { return; }
             if (!DA.GetData(2, ref speeed)) { return; }
-            if (!DA.GetData(3, ref StartSim)) { return; }
+            if (!DA.GetData(3, ref springConstant)) { return; }
+            if (!DA.GetData(4, ref ropeweight)) { return; }
+            if (!DA.GetData(5, ref StartSim)) { return; }
 
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
@@ -92,6 +99,20 @@ namespace Dragonfly
 
                 return;
             }
+            if (ropeweight < 0 || ropeweight > 1)
+            {
+                ErrorMsg.WriteLine("weight is crazy, try above 0 and 1 kg/m");
+                DA.SetData(0, ErrorMsg.ToString());
+
+                return;
+            }
+            if (springConstant < 0)
+            {
+                ErrorMsg.WriteLine("springconstant is crazy, try above 0, say 100?");
+                DA.SetData(0, ErrorMsg.ToString());
+
+                return;
+            }
 
             DA.SetData( 0, ErrorMsg.ToString());
 
@@ -99,8 +120,8 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncRope ropeSim = new AsyncRope(viaPoints, compleationDist, speeed, ref DA);
-                    AsyncRope.hasLoaded = true;
+                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant, ref DA);
+                    AsyncCopter.hasLoaded = true;
                     ropeSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");
                     DA.SetData( 0, ErrorMsg.ToString());
@@ -122,12 +143,12 @@ namespace Dragonfly
                     ErrorMsg.WriteLine("Stopping Simulation");
                     DA.SetData( 0, ErrorMsg.ToString());
 
-                    foreach (AsyncRope Sim in ropeSims)
+                    foreach (AsyncCopter Sim in ropeSims)
                     {
                         Sim.StopNow();
                         Sim.Abort();
                     }
-                    AsyncRope.hasLoaded = false;
+                    AsyncCopter.hasLoaded = false;
                     hasloaded = false;
                     ropeSims.Clear();
                 }
