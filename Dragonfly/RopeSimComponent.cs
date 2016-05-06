@@ -41,6 +41,8 @@ namespace Dragonfly
         {
             pManager.AddTextParameter("Progress Text", "Err", "Text from the background worker. will usually be a percentage of task.", GH_ParamAccess.item);
             pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
+            pManager.AddVectorParameter("numberTest", "Debug", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -66,6 +68,8 @@ namespace Dragonfly
             if (!DA.GetData(3, ref StartSim)) { return; }
 
             rope = new Polyline(ropeVectors);
+
+            DA.SetData(2, rope);
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
             if (ropeweight < 0 || ropeweight > 1)
