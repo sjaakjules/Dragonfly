@@ -30,7 +30,8 @@ namespace Dragonfly
         {
             pManager.AddPointParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
-            pManager.AddNumberParameter("rope Density", "weight", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
+            pManager.AddNumberParameter("rope Density", "Density", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
+            pManager.AddNumberParameter("SolverSpeed", "SolverSpeed", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
         }
 
@@ -41,8 +42,6 @@ namespace Dragonfly
         {
             pManager.AddTextParameter("Progress Text", "Err", "Text from the background worker. will usually be a percentage of task.", GH_ParamAccess.item);
             pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
-            pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
-            pManager.AddVectorParameter("numberTest", "Debug", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -57,6 +56,7 @@ namespace Dragonfly
             List<Point3d> ropeVectors = new List<Point3d>();
             Polyline rope = new Polyline();
             bool StartSim = false;
+            double solverSpeed = 0.001;
 
             StringWriter ErrorMsg = new StringWriter();
 
@@ -65,11 +65,11 @@ namespace Dragonfly
             if (!DA.GetDataList(0, ropeVectors)) { return; }
             if (!DA.GetData(1, ref springConstant)) { return; }
             if (!DA.GetData(2, ref ropeweight)) { return; }
-            if (!DA.GetData(3, ref StartSim)) { return; }
+            if (!DA.GetData(3, ref solverSpeed)) { return; }
+            if (!DA.GetData(4, ref StartSim)) { return; }
 
             rope = new Polyline(ropeVectors);
 
-            DA.SetData(2, rope);
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
             if (ropeweight < 0 || ropeweight > 1)
@@ -86,13 +86,22 @@ namespace Dragonfly
 
                 return;
             }
+            if (solverSpeed > 0.01)
+            {
+                ErrorMsg.WriteLine("solver speed is crazy! try below 0.001");
+                DA.SetData(0, ErrorMsg.ToString());
+
+                return;
+            }
+
+
 
 
             if (StartSim)
             {
                 if (!hasloaded)
                 {
-                    AsyncRope ropeSim = new AsyncRope(rope,ropeweight,springConstant, ref DA);
+                    AsyncRope ropeSim = new AsyncRope(rope,ropeweight,springConstant,solverSpeed, ref DA);
                     AsyncRope.hasLoaded = true;
                     ropeSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");
@@ -142,7 +151,7 @@ namespace Dragonfly
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return null;
+                return Properties.Resources.Dragonfly3;
             }
         }
 

@@ -5,13 +5,38 @@ using System.Text;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
+using Threaded;
+
 namespace CustomExtensions
 {
     static class CustomExtensions
     {
+        public static Polyline ToPoly(this pointMass[] simRope)
+        {
+            List<Point3d> outPoly = new List<Point3d>();
+            for (int i = 0; i < simRope.Length; i++)
+            {
+                outPoly.Add(simRope[i].Point);
+            }
+            return new Polyline(outPoly);
+        }
+
+        public static void doubleArray(this double[] array, double value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = value;
+            }
+        }
+
         public static double DotProduct(this Vector3d a, Vector3d b)
         {
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+        public static Vector3d scalerMultiply(this Vector3d a, Vector3d b)
+        {
+            return new Vector3d(a.X * b.X , a.Y * b.Y , a.Z * b.Z);
         }
 
         public static double CrossProductLength(this Vector3d a, Vector3d b)

@@ -39,7 +39,8 @@ namespace Dragonfly
             pManager.AddNumberParameter("Compleation Distance", "Dist", "The maximum distance to the desired point before it moves down the list", GH_ParamAccess.item);
             pManager.AddNumberParameter("Speed (m/s)", "Speed", "The average speed for the copter to fly, 0.1 std", GH_ParamAccess.item);
             pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
-            pManager.AddNumberParameter("rope Density", "weight", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
+            pManager.AddNumberParameter("rope Density", "Density", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
+            pManager.AddNumberParameter("SolverSpeed", "SolverSpeed", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
 
         }
@@ -69,8 +70,9 @@ namespace Dragonfly
             StringWriter ErrorMsg = new StringWriter();
             double compleationDist = 0;
             double speeed = 0.1;
-            double ropeweight = 0.05;
-            double springConstant = 10;
+            double ropeweight = 0.5;
+            double springConstant = 3000;
+            double ropeSolverSpeed = 0.001;
 
             // Use the DA object to retrieve the data inside the first input parameter.
             // If the retieval fails (for example if there is no data) we need to abort.
@@ -79,7 +81,8 @@ namespace Dragonfly
             if (!DA.GetData(2, ref speeed)) { return; }
             if (!DA.GetData(3, ref springConstant)) { return; }
             if (!DA.GetData(4, ref ropeweight)) { return; }
-            if (!DA.GetData(5, ref StartSim)) { return; }
+            if (!DA.GetData(5, ref ropeSolverSpeed)) { return; }
+            if (!DA.GetData(6, ref StartSim)) { return; }
 
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
@@ -99,16 +102,9 @@ namespace Dragonfly
 
                 return;
             }
-            if (ropeweight < 0 || ropeweight > 1)
+            if (ropeSolverSpeed > 0.01)
             {
-                ErrorMsg.WriteLine("weight is crazy, try above 0 and 1 kg/m");
-                DA.SetData(0, ErrorMsg.ToString());
-
-                return;
-            }
-            if (springConstant < 0)
-            {
-                ErrorMsg.WriteLine("springconstant is crazy, try above 0, say 100?");
+                ErrorMsg.WriteLine("solver speed is crazy! try below 0.001");
                 DA.SetData(0, ErrorMsg.ToString());
 
                 return;
@@ -120,7 +116,7 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant, ref DA);
+                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant,ropeSolverSpeed, ref DA);
                     AsyncCopter.hasLoaded = true;
                     ropeSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");
