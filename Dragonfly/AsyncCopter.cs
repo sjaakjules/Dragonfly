@@ -41,13 +41,13 @@ namespace Threaded
         Vector3d gravity = new Vector3d(0, 0, -9.8);
         double desiredSpeed = 0.1;                  // m/s
         double lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
-        int solverSpeed = 10;                        // ms
+        readonly int solverSpeed = 10;                        // ms
         double timeStep = 10;
 
         Point3d currentPoint;
 
         Polyline posHistory = new Polyline();
-        double segmentLength = 0.5;                   // m
+        readonly double segmentLength = 0.1;                   // m
 
         Polyline rope = new Polyline();
         double ropeDesity = 0.5;                    // kg/m
@@ -59,9 +59,10 @@ namespace Threaded
         List<pointMass> ropePointMass = new List<pointMass>();
         List<double> ropeRestLengths = new List<double>();
         double ropeSolverSpeed = 0.001;
+        Curve[] obstacles;
 
 
-        public AsyncCopter(List<Point3d> _points, double _compleationDistance, double _speed,double _ropeDensity, double _springConstant,double _ropeSolverSpeed, ref IGH_DataAccess _DA)
+        public AsyncCopter(List<Point3d> _points, double _compleationDistance, double _speed,double _ropeDensity, double _springConstant,double _ropeSolverSpeed,Curve[] _obstacles, ref IGH_DataAccess _DA)
             : base()
         {
             DA = _DA;
@@ -70,6 +71,7 @@ namespace Threaded
             ropeDesity = _ropeDensity;
             springConstant = _springConstant;
             ropeSolverSpeed = _ropeSolverSpeed;
+            obstacles = _obstacles;
 
             points = _points;
             currentPoint = _points[0];
@@ -79,7 +81,8 @@ namespace Threaded
             posHistory.Add(_points[0]);
             posHistory.Add(_points[1]);
 
-            ropeSim = new AsyncRope(_ropeDensity, _springConstant, ropeSolverSpeed, ref _DA);
+            ropeSim = new AsyncRope(_ropeDensity, _springConstant, ropeSolverSpeed,
+            obstacles, ref _DA);
             ropePointMass.Add(new pointMass(new Vector3d(_points[0]), segmentLength * _ropeDensity, Vector3d.Zero));
             ropePointMass.Add(new pointMass(new Vector3d(_points[0]), segmentLength * _ropeDensity, Vector3d.Zero));
             ropeRestLengths.Add(segmentLength);
@@ -172,7 +175,7 @@ namespace Threaded
                         {
                             while (ropeSimTimer.Elapsed.TotalMilliseconds < solverSpeed)
                             {
-                                 errorMsg = ropeSim.Simulate(simArray, segLengthArray, ropeSolverSpeed);
+                                errorMsg = ropeSim.Simulate(ropePointMass, segLengthArray, ropeSolverSpeed);
                             }
                         }
                         else
@@ -207,7 +210,7 @@ namespace Threaded
                         double[] segLengthArray = ropeRestLengths.ToArray();
                         string errorMsg = "";
 
-                        errorMsg = ropeSim.Simulate(ropePointMass.ToArray(), ropeRestLengths.ToArray(), ropeSolverSpeed);
+                        errorMsg = ropeSim.Simulate(ropePointMass, ropeRestLengths.ToArray(), ropeSolverSpeed);
 
                         rope = new Polyline(simArray.Length);
                         for (int j = 0; j < simArray.Length; j++)

@@ -11,10 +11,27 @@ namespace CustomExtensions
 {
     static class CustomExtensions
     {
+        public static Vector3d Unit(this Vector3d v)
+        {
+            Vector3d v_hat = v;
+            v_hat.Unitize();
+            return v_hat;
+        }
+
         public static Polyline ToPoly(this pointMass[] simRope)
         {
             List<Point3d> outPoly = new List<Point3d>();
             for (int i = 0; i < simRope.Length; i++)
+            {
+                outPoly.Add(simRope[i].Point);
+            }
+            return new Polyline(outPoly);
+        }
+
+        public static Polyline ToPoly(this List<pointMass> simRope)
+        {
+            List<Point3d> outPoly = new List<Point3d>();
+            for (int i = 0; i < simRope.Count; i++)
             {
                 outPoly.Add(simRope[i].Point);
             }
@@ -27,6 +44,14 @@ namespace CustomExtensions
             {
                 array[i] = value;
             }
+        }
+
+        public static Point3d minus(this Point3d a, Point3d b)
+        {
+            Vector3d v_a = new Vector3d(a);
+
+            Vector3d v_b = new Vector3d(b);
+            return new Point3d(v_a - v_b);
         }
 
         public static double DotProduct(this Vector3d a, Vector3d b)

@@ -41,6 +41,7 @@ namespace Dragonfly
             pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
             pManager.AddNumberParameter("rope Density", "Density", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
             pManager.AddNumberParameter("SolverSpeed", "SolverSpeed", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
+            pManager.AddCurveParameter("obstacles List", "List of obstacle ropes for rope simulation", "obstacles", GH_ParamAccess.list);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
 
         }
@@ -73,6 +74,7 @@ namespace Dragonfly
             double ropeweight = 0.5;
             double springConstant = 3000;
             double ropeSolverSpeed = 0.001;
+            List<Curve> _obstacles = new List<Curve>();
 
             // Use the DA object to retrieve the data inside the first input parameter.
             // If the retieval fails (for example if there is no data) we need to abort.
@@ -82,7 +84,8 @@ namespace Dragonfly
             if (!DA.GetData(3, ref springConstant)) { return; }
             if (!DA.GetData(4, ref ropeweight)) { return; }
             if (!DA.GetData(5, ref ropeSolverSpeed)) { return; }
-            if (!DA.GetData(6, ref StartSim)) { return; }
+            if (!DA.GetDataList(6, _obstacles)) { return; }
+            if (!DA.GetData(7, ref StartSim)) { return; }
 
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
@@ -116,7 +119,7 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant,ropeSolverSpeed, ref DA);
+                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant,ropeSolverSpeed,_obstacles.ToArray(), ref DA);
                     AsyncCopter.hasLoaded = true;
                     ropeSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");
