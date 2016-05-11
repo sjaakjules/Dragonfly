@@ -41,7 +41,7 @@ namespace Dragonfly
             pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
             pManager.AddNumberParameter("rope Density", "Density", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
             pManager.AddNumberParameter("SolverSpeed", "SolverSpeed", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
-            pManager.AddCurveParameter("obstacles List", "List of obstacle ropes for rope simulation", "obstacles", GH_ParamAccess.list);
+            pManager.AddCurveParameter("obstacles List", "obstacles", "List of obstacle ropes for rope simulation", GH_ParamAccess.list);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
 
         }
