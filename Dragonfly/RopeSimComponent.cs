@@ -46,6 +46,7 @@ namespace Dragonfly
         {
             pManager.AddTextParameter("Progress Text", "Err", "Text from the background worker. will usually be a percentage of task.", GH_ParamAccess.item);
             pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
+          //  pManager.AddPointParameter("Collision Points", "Collision Points", "Collision Points on the rope and obstacle", GH_ParamAccess.list);
         }
 
         /// <summary>

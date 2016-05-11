@@ -41,7 +41,7 @@ namespace Threaded
         Vector3d gravity = new Vector3d(0, 0, -9.8);
         double desiredSpeed = 0.1;                  // m/s
         double lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
-        readonly int solverSpeed = 10;                        // ms
+        readonly int solverSpeed = 20;                        // ms
         double timeStep = .01;
 
         Point3d currentPoint;
@@ -208,6 +208,8 @@ namespace Threaded
 
                 if (ropePointMass.Count > 5)
                 {
+
+                    DA.SetData(0, "Simulating rope only...\n");
                     while (!shouldStop)
                     {
                         pointMass[] simArray = ropePointMass.ToArray();
@@ -230,7 +232,7 @@ namespace Threaded
             catch (Exception e)
             {
 
-                DA.SetData(0, "Error: " + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
+                DA.SetData(0, "Shit error: \n" + e.Message + "\n" + e.ToString() + "\n" + e.StackTrace + "\n" + e.Source + "\n" + e.InnerException.Message);
             }
 
         }
