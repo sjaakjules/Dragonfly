@@ -13,7 +13,7 @@ namespace Dragonfly
 {
     public class DragonflyComponent : GH_Component
     {
-        static List<AsyncCopter> ropeSims = new List<AsyncCopter>();
+        static List<AsyncCopter> copterSims = new List<AsyncCopter>();
         bool hasloaded = false;
 
         /// <summary>
@@ -119,11 +119,11 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed,ropeweight,springConstant,ropeSolverSpeed,_obstacles.ToArray(), ref DA);
+                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed, ropeweight, springConstant, ropeSolverSpeed, _obstacles.ToArray(), ref DA);
                     AsyncCopter.hasLoaded = true;
-                    ropeSims.Add(ropeSim);
+                    copterSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");
-                    DA.SetData( 0, ErrorMsg.ToString());
+                    DA.SetData(0, ErrorMsg.ToString());
 
                     ropeSim.Start();
                     ErrorMsg.WriteLine("started");
@@ -132,7 +132,7 @@ namespace Dragonfly
                 else
                 {
                     ErrorMsg.WriteLine("Simulating....");
-                    DA.SetData( 0, ErrorMsg.ToString());
+                    DA.SetData(0, ErrorMsg.ToString());
                 }
             }
             else
@@ -140,22 +140,35 @@ namespace Dragonfly
                 if (hasloaded)
                 {
                     ErrorMsg.WriteLine("Stopping Simulation");
-                    DA.SetData( 0, ErrorMsg.ToString());
+                    DA.SetData(0, ErrorMsg.ToString());
 
-                    foreach (AsyncCopter Sim in ropeSims)
+                    foreach (AsyncCopter Sim in copterSims)
                     {
                         Sim.StopNow();
                         Sim.Abort();
                     }
                     AsyncCopter.hasLoaded = false;
                     hasloaded = false;
-                    ropeSims.Clear();
+                    //ropeSims.Clear();
                 }
                 else
                 {
-                    DA.SetData( 0, ErrorMsg.ToString());
+                    DA.SetData(0, ErrorMsg.ToString());
                     ErrorMsg.WriteLine("Simulation is stopped");
-                    DA.SetData( 0, ErrorMsg.ToString());
+                    DA.SetData(0, ErrorMsg.ToString());
+                }
+
+                for (int i = 0; i < copterSims.Count; i++)
+                {
+                    if (copterSims[i].running)
+                    {
+                        copterSims[i].StopNow();
+                        copterSims[i].Abort();
+                    }
+                    else
+                    {
+                        copterSims.RemoveAt(i);
+                    }
                 }
             }
         }

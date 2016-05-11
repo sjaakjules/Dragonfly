@@ -30,7 +30,7 @@ namespace Threaded
         double groundFrictionConstant = 0.2;
         double groundRepelConstant = 100;
         double groundAbsoptionConstant = 2;
-        double solverSpeed = 0.0007;                        // ms
+        double solverSpeed = 0.001;                        // ms
         double collisionDistance = .2;
 
         List<double> segmentLengths = new List<double>();
@@ -161,6 +161,13 @@ namespace Threaded
                 SimRope[i].solve(timeStep);
             }
 
+            /*
+             * 
+             * 
+             * 
+             * 
+             * 
+             * 
             // if rope is coliding with other ropes. 
 
             Polyline rope = new Polyline(SimRope.Count);
@@ -246,6 +253,12 @@ namespace Threaded
                 return error.ToString();
             }
 
+             * 
+             * 
+             * 
+             * 
+             * 
+             */
 
             error.AppendLine("RopeSim all good.");
             return error.ToString();

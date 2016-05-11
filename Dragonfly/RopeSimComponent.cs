@@ -112,7 +112,7 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncRope ropeSim = new AsyncRope(rope,ropeweight,springConstant,solverSpeed,groundFrictionConstant, groundRepelConstant,groundAbsoptionConstant,_obstacles.ToArray(),  ref DA);
+                    AsyncRope ropeSim = new AsyncRope(rope, ropeweight, springConstant, solverSpeed, groundFrictionConstant, groundRepelConstant, groundAbsoptionConstant, _obstacles.ToArray(), ref DA);
                     AsyncRope.hasLoaded = true;
                     ropeSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");

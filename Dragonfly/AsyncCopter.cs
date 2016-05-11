@@ -42,15 +42,15 @@ namespace Threaded
         double desiredSpeed = 0.1;                  // m/s
         double lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
         readonly int solverSpeed = 10;                        // ms
-        double timeStep = 10;
+        double timeStep = .01;
 
         Point3d currentPoint;
 
         Polyline posHistory = new Polyline();
-        readonly double segmentLength = 0.1;                   // m
+        readonly double segmentLength = 0.2;                   // m
 
         Polyline rope = new Polyline();
-        double ropeDesity = 0.5;                    // kg/m
+        double ropeDesity = 0.3;                    // kg/m
         double totalRopeLength = 0;
         double springConstant = 3000;               // rope is 1300 N/m
         // wire rope 5.345*10^7
@@ -81,8 +81,7 @@ namespace Threaded
             posHistory.Add(_points[0]);
             posHistory.Add(_points[1]);
 
-            ropeSim = new AsyncRope(_ropeDensity, _springConstant, ropeSolverSpeed,
-            obstacles, ref _DA);
+            ropeSim = new AsyncRope(_ropeDensity, _springConstant, ropeSolverSpeed,obstacles, ref _DA);
             ropePointMass.Add(new pointMass(new Vector3d(_points[0]), segmentLength * _ropeDensity, Vector3d.Zero));
             ropePointMass.Add(new pointMass(new Vector3d(_points[0]), segmentLength * _ropeDensity, Vector3d.Zero));
             ropeRestLengths.Add(segmentLength);
@@ -92,6 +91,8 @@ namespace Threaded
         public void StopNow()
         {
             shouldStop = true;
+            this.Abort();
+            base.Abort();
         }
 
         public override void run(BackgroundWorker worker)
@@ -103,7 +104,7 @@ namespace Threaded
 
             DA.SetData(0, "Simulating...");
 
-            timeStep = DateTime.Now.TimeOfDay.TotalMilliseconds - lastTimeStamp;
+            timeStep = (DateTime.Now.TimeOfDay.TotalMilliseconds - lastTimeStamp) / 1000;
             lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
 
             System.Threading.Thread.Sleep(solverSpeed);
@@ -113,6 +114,7 @@ namespace Threaded
                 // for each via point
                 for (int i = 1; i < points.Count; i++)
                 {
+
                     if (shouldStop)
                     {
                         break;
@@ -120,10 +122,11 @@ namespace Threaded
 
                     DA.SetData(2, new Point3d(points[i]));
 
-                    while (Math.Abs(points[i].DistanceTo(new Point3d(pos))) > compleationDistance)
+                    while (Math.Abs(points[i].DistanceTo(new Point3d(pos))) > compleationDistance && !shouldStop)
                     {
                         timeStep = (DateTime.Now.TimeOfDay.TotalMilliseconds - lastTimeStamp) / 1000;
 
+                        lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
 
                         // stop if triggered from GH
                         if (shouldStop)
@@ -149,25 +152,25 @@ namespace Threaded
                         {
                             ropeRestLengths.Add(segmentLength);
                             // set last and first as anchor points
-                            ropePointMass.Add(new pointMass(pos, segmentLength * ropeDesity,Vector3d.Zero));
-                            ropePointMass[ropePointMass.Count - 2] = new pointMass(pos + 0.5*(ropePointMass[ropePointMass.Count - 3].Pos - pos), segmentLength * ropeDesity, new Vector3d(1, 1, 1));
+                            ropePointMass.Add(new pointMass(pos, segmentLength * ropeDesity, Vector3d.Zero));
+                            ropePointMass[ropePointMass.Count - 2] = new pointMass(pos + 0.5 * (ropePointMass[ropePointMass.Count - 3].Pos - pos), segmentLength * ropeDesity, new Vector3d(1, 1, 1));
                             totalRopeLength += segmentLength;
                         }
 
+
                         ropeSimTimer.Restart();
-                        pointMass[] simArray = ropePointMass.ToArray();
+                        //   pointMass[] simArray = ropePointMass.ToArray();
                         double[] segLengthArray = ropeRestLengths.ToArray();
 
-                        if (!simArray[0].isFixed)
+                        if (!ropePointMass[0].isFixed)
                         {
-                            simArray[0].Anchor = Vector3d.Zero;
+                            ropePointMass[0].Anchor = Vector3d.Zero;
                         }
-                        if (!simArray[simArray.Length-1].isFixed)
+                        if (!ropePointMass[ropePointMass.Count - 1].isFixed)
                         {
-                            simArray[simArray.Length - 1].Anchor = Vector3d.Zero;
+                            ropePointMass[ropePointMass.Count - 1].Anchor = Vector3d.Zero;
                         }
 
-                        lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
 
                         string errorMsg = "";
                         // Relax rope with pos location
@@ -184,10 +187,10 @@ namespace Threaded
                         }
 
 
-                        rope = new Polyline(simArray.Length);
-                        for (int j = 0; j < simArray.Length; j++)
+                        rope = new Polyline(ropePointMass.Count);
+                        for (int j = 0; j < ropePointMass.Count; j++)
                         {
-                            rope.Add(simArray[j].Point);
+                            rope.Add(ropePointMass[j].Point);
                         }
 
                         // Publish to GH
@@ -197,6 +200,7 @@ namespace Threaded
 
                         DA.SetData(0, "Simulating...\n" + errorMsg);
 
+                        // lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
                     }
 
                     worker.ReportProgress(100 * i / points.Count);
@@ -215,21 +219,19 @@ namespace Threaded
                         rope = new Polyline(simArray.Length);
                         for (int j = 0; j < simArray.Length; j++)
                         {
-                            rope.Add(simArray[j].Point);
+                            rope.Add(ropePointMass[j].Point);
                         }
 
                         DA.SetData(4, rope);
                         DA.SetData(0, "Simulating...\n" + errorMsg);
                     }
                 }
-
             }
-            catch (Exception e )
+            catch (Exception e)
             {
 
                 DA.SetData(0, "Error: " + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
             }
-
 
         }
 
