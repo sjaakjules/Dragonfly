@@ -161,13 +161,6 @@ namespace Threaded
                 SimRope[i].solve(timeStep);
             }
 
-            /*
-             * 
-             * 
-             * 
-             * 
-             * 
-             * 
             // if rope is coliding with other ropes. 
 
             Polyline rope = new Polyline(SimRope.Count);
@@ -180,68 +173,69 @@ namespace Threaded
 
             try
             {
-
-                for (int i = 0; i < obstacles.Length; i++)
+                if (obstacles != null && obstacles.Length > 0)
                 {
-                    double max = 0;
-                    int maxIndicie = 0;
-                    double secondMax = 0;
-                    int secondMaxIndicie = 0;
-                    Point3d ropeInt, obsticalInt;
-
-                    curve.ClosestPoints(obstacles[i], out ropeInt, out obsticalInt);
-
-                    // If the distance is within the collision zone
-                    if (ropeInt.DistanceTo(obsticalInt) < collisionDistance)
+                    for (int i = 0; i < obstacles.Length; i++)
                     {
-                        // Check each node of the rope and add collision to planes if a plane of a close plane
-                        for (int j = 0; j < SimRope.Count; j++)
+                        double max = 0;
+                        int maxIndicie = 0;
+                        double secondMax = 0;
+                        int secondMaxIndicie = 0;
+                        Point3d ropeInt, obsticalInt;
+
+                        curve.ClosestPoints(obstacles[i], out ropeInt, out obsticalInt);
+
+                        // If the distance is within the collision zone
+                        if (ropeInt.DistanceTo(obsticalInt) < collisionDistance)
                         {
-                            // if a massnode is close to the collision point and not in the collision planes
-                            if (SimRope[j].Point.DistanceTo(ropeInt) < segmentLengths.Average())
+                            // Check each node of the rope and add collision to planes if a plane of a close plane
+                            for (int j = 0; j < SimRope.Count; j++)
                             {
-                                // check if it is within the planes.
-                                // If it isnt within collision zone size area of the collision list then add to collection 
-                                Point3d collisionNormalVector = ropeInt.minus(obsticalInt);
-                                Plane newcollisionPlane = new Plane(obsticalInt, new Vector3d(collisionNormalVector));
-
-                                bool isWithin = false;
-                                Plane[] tempcollisionPlanes = new Plane[collisionPlanes.Count + 1];
-                                foreach (var plane in collisionPlanes)
+                                // if a massnode is close to the collision point and not in the collision planes
+                                if (SimRope[j].Point.DistanceTo(ropeInt) < segmentLengths.Average())
                                 {
-                                    // if the point on the surface of the obstical  is within collison distance of each plane in collisionplanes
-                                    if (plane.Origin.DistanceTo(newcollisionPlane.Origin) < collisionDistance)
-                                    {
-                                        // And is within the same normal direction
-                                        if (plane.Normal.getAngleBetween(newcollisionPlane.Normal) < Math.PI)
-                                        {
-                                            // modify the plane which is similar to be the new vector 
-                                        }
-                                        // And oposite direction to stored value
-                                        if (plane.Normal.getAngleBetween(newcollisionPlane.Normal) > Math.PI)
-                                        {
+                                    // check if it is within the planes.
+                                    // If it isnt within collision zone size area of the collision list then add to collection 
+                                    Point3d collisionNormalVector = ropeInt.minus(obsticalInt);
+                                    Plane newcollisionPlane = new Plane(obsticalInt, new Vector3d(collisionNormalVector));
 
-                                        }
-                                        isWithin = true;
-                                        break;
-                                    }
-                                    // if not
-                                    else
+                                    bool isWithin = false;
+                                    Plane[] tempcollisionPlanes = new Plane[collisionPlanes.Count + 1];
+                                    foreach (var plane in collisionPlanes)
                                     {
-                                        applyCollisionForce(newcollisionPlane, SimRope[j]);
+                                        // if the point on the surface of the obstical  is within collison distance of each plane in collisionplanes
+                                        if (plane.Origin.DistanceTo(newcollisionPlane.Origin) < collisionDistance)
+                                        {
+                                            // And is within the same normal direction
+                                            if (plane.Normal.getAngleBetween(newcollisionPlane.Normal) < Math.PI)
+                                            {
+                                                // modify the plane which is similar to be the new vector 
+                                            }
+                                            // And oposite direction to stored value
+                                            if (plane.Normal.getAngleBetween(newcollisionPlane.Normal) > Math.PI)
+                                            {
+
+                                            }
+                                            isWithin = true;
+                                            break;
+                                        }
+                                        // if not
+                                        else
+                                        {
+                                            applyCollisionForce(newcollisionPlane, SimRope[j]);
+                                        }
                                     }
-                                }
-                                if (!isWithin)
-                                {
-                                    collisionPlanes.Add(newcollisionPlane);
+                                    if (!isWithin)
+                                    {
+                                        collisionPlanes.Add(newcollisionPlane);
+                                    }
                                 }
                             }
+
                         }
+                        //Curve.GetDistancesBetweenCurves(obstacles[i], rope.ToNurbsCurve(), 0.1, out max, out  Amax, out  Bmax, out  min, out  Amin, out Bmin);
 
                     }
-                    //Curve.GetDistancesBetweenCurves(obstacles[i], rope.ToNurbsCurve(), 0.1, out max, out  Amax, out  Bmax, out  min, out  Amin, out Bmin);
-
-
                 }
 
             }
@@ -253,12 +247,6 @@ namespace Threaded
                 return error.ToString();
             }
 
-             * 
-             * 
-             * 
-             * 
-             * 
-             */
 
             error.AppendLine("RopeSim all good.");
             return error.ToString();
