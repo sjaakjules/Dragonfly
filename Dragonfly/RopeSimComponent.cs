@@ -32,10 +32,9 @@ namespace Dragonfly
             pManager.AddNumberParameter("Rope Constant (N/m)", "Stress", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
             pManager.AddNumberParameter("rope Density", "Density", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
             pManager.AddNumberParameter("SolverSpeed", "SolverSpeed", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Rope Constant (N/m)", "gfriction", "The spring constant in hooks law, F=kx, 0.1 std", GH_ParamAccess.item);
-            pManager.AddNumberParameter("rope Density", "gRepel", "weight per linear m, rope 1cm diameter is 0.05", GH_ParamAccess.item);
-            pManager.AddNumberParameter("SolverSpeed", "gAbsorp", "Time in ms for each loop. must be less than 0.001 for stability", GH_ParamAccess.item);
-            pManager.AddCurveParameter("obstacles List", "obstacles", "List of obstacle ropes for rope simulation", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Ground Friction", "gfriction", "This is the friction of the ground. (from 0 to 1)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Ground repulsion", "gRepel", "This is the force used to push the rope out of the virtual ground", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Ground Absorption", "gAbsorp", "The is the force used to absorb the collision impact", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
         }
 
@@ -44,8 +43,8 @@ namespace Dragonfly
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("Progress Text", "Err", "Text from the background worker. will usually be a percentage of task.", GH_ParamAccess.item);
-            pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
+            pManager.AddTextParameter("Error Text", "Msg", "Text from the background worker. will be updates or error messages.", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Rope", "Rope", "Rope to be simulated", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -55,15 +54,15 @@ namespace Dragonfly
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // Declare a variable for the input String
-            double ropeweight = 0.05;
-            double springConstant = 10;
+            double ropeweight = 0.2;
+            double springConstant = 1300;
             List<Point3d> ropeVectors = new List<Point3d>();
             Polyline rope = new Polyline();
             bool StartSim = false;
             double solverSpeed = 0.001;
-            double groundFrictionConstant = 0.02;
-            double groundRepelConstant = 1;
-            double groundAbsoptionConstant = 1;
+            double groundFrictionConstant = 0.2;
+            double groundRepelConstant = 100;
+            double groundAbsoptionConstant = 2;
             List<Curve> _obstacles = new List<Curve>();
             StringWriter ErrorMsg = new StringWriter();
 
@@ -76,14 +75,13 @@ namespace Dragonfly
             if (!DA.GetData(4, ref groundFrictionConstant)) { return; }
             if (!DA.GetData(5, ref groundRepelConstant)) { return; }
             if (!DA.GetData(6, ref groundAbsoptionConstant)) { return; }
-            if (!DA.GetDataList(7, _obstacles)) { return; }
-            if (!DA.GetData(8, ref StartSim)) { return; }
+            if (!DA.GetData(7, ref StartSim)) { return; }
 
             rope = new Polyline(ropeVectors);
 
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
-            if (ropeweight < 0 || ropeweight > 1)
+            if (ropeweight < 0)
             {
                 ErrorMsg.WriteLine("weight is crazy, try above 0 and 1 kg/m");
                 DA.SetData(0, ErrorMsg.ToString());
@@ -97,7 +95,7 @@ namespace Dragonfly
 
                 return;
             }
-            if (solverSpeed > 0.01)
+            if (solverSpeed > 0.1)
             {
                 ErrorMsg.WriteLine("solver speed is crazy! try below 0.001");
                 DA.SetData(0, ErrorMsg.ToString());

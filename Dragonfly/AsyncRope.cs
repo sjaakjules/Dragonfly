@@ -22,8 +22,8 @@ namespace Threaded
         public static bool hasLoaded = false;
         bool shouldStop = false;
 
-        double ropeDesity = 0.4;                    // kg/m
-        double springConstant = 3000;               // rope is 1300 N/m
+        double ropeDesity = 0.2;                    // kg/m
+        double springConstant = 1300;               // rope is 1300 N/m
         // wire rope 5.345*10^7
         readonly double internalFrictionConstant = 0.005;      // 0.2 N/(m/s) is good from trial and error
         readonly double dragCoeficient = 0.45;              // Shape is a circle
@@ -40,6 +40,8 @@ namespace Threaded
 
         Curve[] obstacles;
 
+        Point3d[] anchorPoints;
+
 
         public AsyncRope(double _density, double _springConstant, double _solverSpeed, Curve[] _obstacles, ref IGH_DataAccess _DA)
         {
@@ -48,6 +50,16 @@ namespace Threaded
             springConstant = _springConstant;
             solverSpeed = _solverSpeed;
             obstacles =  _obstacles;
+        }
+
+        public AsyncRope(double _density, double _springConstant, double _solverSpeed, Curve[] _obstacles, Point3d[] _anchorPoints, ref IGH_DataAccess _DA)
+        {
+            DA = _DA;
+            ropeDesity = _density;
+            springConstant = _springConstant;
+            solverSpeed = _solverSpeed;
+            obstacles = _obstacles;
+            anchorPoints = _anchorPoints;
         }
 
         public AsyncRope(Polyline _rope, double _density, double _springConstant, double _solverSpeed, double _groundFrictionConstant, double _groundRepelConstant, double _groundAbsoptionConstant, Curve[] _obstacles, ref IGH_DataAccess _DA)
@@ -101,6 +113,30 @@ namespace Threaded
                 DA.SetData(0, error.ToString());
                 DA.SetData(1, ropePointMass.ToPoly());
             }
+        }
+        
+        public string Simulate(List<pointMass> SimRope, double[] restLengths, double timeStep, Point3d[] Anchors, double anchorDistance)
+        {
+            StringBuilder error = new StringBuilder();
+
+            // Simulate Line for one timestep.
+            error.AppendLine(Simulate(SimRope, restLengths, timeStep));
+
+            // for each segment lock movement if near anchor point.
+            for (int i = 0; i < (SimRope.Count - 1); i++)
+            {
+                // anchor any points
+                for (int j = 0; j < Anchors.Length; j++)
+                {
+                    if (SimRope[i].Point.DistanceTo(Anchors[j]) < anchorDistance)
+                    {
+                        SimRope[i].Anchor = Vector3d.Zero;
+                    }
+                }
+            }
+
+            error.AppendLine("RopeSim all good.");
+            return error.ToString();
         }
 
         public string Simulate(List<pointMass> SimRope, double[] restLengths, double timeStep)
@@ -319,7 +355,7 @@ namespace Threaded
         public Point3d Point { get { return new Point3d(position); } }
         public Vector3d unitVel { get { Vector3d outVec = new Vector3d(velocity); outVec.Unitize(); return outVec; } }
         public bool isFixed { get { return anchor.Equals(Vector3d.Zero); } }
-        public Vector3d Anchor { set { anchor = value; } }
+        public Vector3d Anchor { get { return anchor; } set { anchor = value; } }
 
         public pointMass(Vector3d startPosition, double weight, Vector3d _anchor)
         {

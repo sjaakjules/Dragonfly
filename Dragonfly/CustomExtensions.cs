@@ -6,11 +6,19 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 
 using Threaded;
+using Grasshopper.Kernel.Types.Transforms;
 
 namespace CustomExtensions
 {
     static class CustomExtensions
     {
+        public static Mesh Orient(this Mesh obj, Orientation transform)
+        {
+            Mesh outMesh = obj.DuplicateMesh();
+            outMesh.Transform(transform.ToMatrix());
+            return outMesh;
+        }
+
         public static Vector3d Unit(this Vector3d v)
         {
             Vector3d v_hat = v;

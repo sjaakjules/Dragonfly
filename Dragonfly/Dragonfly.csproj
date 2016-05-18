@@ -56,6 +56,7 @@
     <Compile Include="AsyncCopter.cs" />
     <Compile Include="AsyncRope.cs" />
     <Compile Include="CustomExtensions.cs" />
+    <Compile Include="FlightSim.cs" />
     <Compile Include="GenericWorker.cs" />
     <Compile Include="KeyedGenericWorker.cs" />
     <Compile Include="DragonflyComponent.cs" />
@@ -67,6 +68,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RopeSimComponent.cs" />
+    <Compile Include="SimpleCopterSim.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
