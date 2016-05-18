@@ -37,8 +37,7 @@ namespace Dragonfly
             pManager.AddNumberParameter("Compleation Distance", "Distance", "The maximum distance to the desired point before it moves down the list", GH_ParamAccess.item);
             pManager.AddNumberParameter("Speed (m/s)", "Copter Speed", "The average speed for the copter to fly, 0.1 std", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Start Sim", "Start", "toggle to start", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Final Plane", "Final Plane", "The plane of the final destination of the object to be moved", GH_ParamAccess.item);
-            pManager.AddMeshParameter("Object", "Object", "The objects to be moved to the final location", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Payload", "Payload", "The objects to be moved to the final location", GH_ParamAccess.item);
             pManager.AddMeshParameter("Copter Mesh", "Copter Mesh", "This is the mesh of the copter which is assumed to be relative to the origin.", GH_ParamAccess.item);
         }
 
@@ -53,7 +52,7 @@ namespace Dragonfly
             pManager.AddCurveParameter("Copter Trail", "Trail", "copter trail which is the flight path it has taken", GH_ParamAccess.item);
             pManager.AddCurveParameter("Rope", "Rope", "Rope from the copter", GH_ParamAccess.item);
             pManager.AddGeometryParameter("Copter Mesh", "CopterGeometry", "The geometry of the copter as it is flying.", GH_ParamAccess.item);
-            pManager.AddGeometryParameter("Payload Mesh", "ObjectGeometry", "The geometry of the object being carries as it is flying.", GH_ParamAccess.item);
+            pManager.AddGeometryParameter("Payload Mesh", "ObjectGeometry", "The geometry of the object being carries as it is flying.", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -74,8 +73,7 @@ namespace Dragonfly
             double springConstant = 1300;
             double ropeSolverSpeed = 0.001;
             List<Curve> _obstacles = new List<Curve>();
-            Plane FinalPlane = new Plane();
-            List<Mesh> objectMesh = new List<Mesh>();
+            Mesh objectMesh = new Mesh();
             Mesh CopterMesh = new Mesh();
 
             // Use the DA object to retrieve the data inside the first input parameter.
@@ -84,17 +82,14 @@ namespace Dragonfly
             if (!DA.GetData(1, ref compleationDist)) { return; }
             if (!DA.GetData(2, ref speeed)) { return; }
             if (!DA.GetData(3, ref StartSim)) { return; }
-            if (!DA.GetData(4, ref FinalPlane)) { return; }
-            if (!DA.GetDataList(5, objectMesh)) { return; }
-            if (!DA.GetData(6, ref CopterMesh)) { return; }
+            if (!DA.GetData(4, ref objectMesh)) { return; }
+            if (!DA.GetData(5, ref CopterMesh)) { return; }
 
             // If the retrieved data is Nothing, we need to abort.
             // We're also going to abort on a zero-length String.
             if (viaPoints == null) { return; }
             if (viaPoints.Count <= 1) { return; }
             if (objectMesh == null) { return; }
-            if (objectMesh.Count <= 0) { return; }
-            if (FinalPlane == null) { return; }
             if (CopterMesh == null) { return; }
 
             if (compleationDist <= 0)
@@ -125,7 +120,7 @@ namespace Dragonfly
             {
                 if (!hasloaded)
                 {
-                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed, ropeweight, springConstant, ropeSolverSpeed, _obstacles.ToArray(),objectMesh.ToArray(), CopterMesh, ref DA);
+                    AsyncCopter ropeSim = new AsyncCopter(viaPoints, compleationDist, speeed, ropeweight, springConstant, ropeSolverSpeed, _obstacles.ToArray(),objectMesh, CopterMesh, ref DA);
                     AsyncCopter.hasLoaded = true;
                     copterSims.Add(ropeSim);
                     ErrorMsg.WriteLine("starting");

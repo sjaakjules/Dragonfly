@@ -69,7 +69,9 @@ namespace Threaded
         Point3d lastAnchoredPoint;
 
         Mesh copterMesh;
-        Mesh[] payload;
+        Mesh payload;
+
+        bool outputMesh = false;
 
 
         public AsyncCopter(List<Point3d> _points, double _compleationDistance, double _speed,double _ropeDensity, double _springConstant,double _ropeSolverSpeed,Curve[] _obstacles, ref IGH_DataAccess _DA)
@@ -121,11 +123,12 @@ namespace Threaded
         }
 
 
-        public AsyncCopter(List<Point3d> _points, double _compleationDistance, double _speed, double _ropeDensity, double _springConstant, double _ropeSolverSpeed, Curve[] _obstacles, Mesh[] _payload, Mesh _copterMesh, ref IGH_DataAccess _DA)
+        public AsyncCopter(List<Point3d> _points, double _compleationDistance, double _speed, double _ropeDensity, double _springConstant, double _ropeSolverSpeed, Curve[] _obstacles, Mesh _payload, Mesh _copterMesh, ref IGH_DataAccess _DA)
             : this(_points, _compleationDistance, _speed, _ropeDensity, _springConstant, _ropeSolverSpeed, _obstacles, ref _DA)
         {
             copterMesh = _copterMesh;
             payload = _payload;
+            outputMesh = true;
         }
 
         public void StopNow()
@@ -268,16 +271,18 @@ namespace Threaded
                         DA.SetData(3, posHistory);
                         DA.SetData(4, rope);
 
-                        Orientation alignment = new Orientation(Plane.WorldXY, pose);
-                        if (copterMesh != null)
+                        if (outputMesh)
                         {
-                            DA.SetData(5, copterMesh.Orient(alignment));
+                            Orientation alignment = new Orientation(Plane.WorldXY, pose);
+                            if (copterMesh != null)
+                            {
+                                DA.SetData(5, copterMesh.Orient(alignment));
+                            }
+                            if (payload != null)
+                            {
+                                DA.SetData(6, payload.Orient(alignment));
+                            }
                         }
-                        if (payload != null)
-                        {
-                            //DA.SetData(6, payload[0].Orient(alignment));
-                        }
-
                         DA.SetData(0, "Simulating...\n" + errorMsg);
 
                         // lastTimeStamp = DateTime.Now.TimeOfDay.TotalMilliseconds;
@@ -337,6 +342,7 @@ namespace Threaded
             veclocityVec = nextPos - pos;
             veclocityVec.Unitize();
             nextPos = veclocityVec * desiredSpeed + pos; Vector3d.CrossProduct(Vector3d.ZAxis, veclocityVec);
+            veclocityVec.Z = -Math.Abs(veclocityVec.Z);
             pose = new Plane(new Point3d(pos), veclocityVec, Vector3d.CrossProduct(Vector3d.ZAxis, veclocityVec));
 
             return nextPos;
